@@ -4,20 +4,24 @@
 #
 class JsonRpcClient
   
-  require 'json'
   require 'net/http'
   require 'uri'
-  
+  require 'timeout'  
     
   #
-  # Our runtime error class.
+  # Our runtime error classes. Indentation reflects inheritance.
   #
   class Error < RuntimeError; end
-  class ServiceError < Error; end
-  class ServiceDown < Error; end
-  class NotAService < Error; end
-  class ServiceReturnsJunk < Error; end
+    class ServiceError < Error; end
+    class ServiceReturnsJunk < Error; end
   
+    class RetriableError < Error; end
+     class NotAService < Error; end
+     class ServiceDown < RetriableError; end
+     class ServiceUnavailable < RetriableError; end
+     class Timeout < RetriableError; end
+       class ServerTimeout < Timeout; end
+       class GatewayTimeout < Timeout; end
   
   #
   # Execute this "declaration" with a string or URI object describing the base URI
@@ -27,7 +31,9 @@ class JsonRpcClient
   # If you pass :no_auto_config => true, no attempt will be made to contact the service
   # to obtain a description of its available services, which means POST will be used
   # for all requests. This is sometimes useful when a server is non-compliant and does not
-  # provide a system.describe call.
+  # provide a system.describe call. If you pass :uri_encode_post_bodies => true, all
+  # bodies used in POSTs will be URI encoded (fixing a tricky case with UTF-8 characters and
+  # non-compliant JSON-RPC servers written in Perl).
   #
   def self.json_rpc_service(base_uri, opts={})
     @uri = URI.parse base_uri
@@ -40,9 +46,23 @@ class JsonRpcClient
     @get_procs = []
     @post_procs = []
     @no_auto_config = opts[:no_auto_config]
+    @uri_encode_post_bodies = opts[:uri_encode_post_bodies]
     @logger = opts[:debug]
+    @retry_strategy = analyze_retry_strategy(opts[:retries])
     @uri
   end
+  
+  
+  def self.analyze_retry_strategy(strat)
+    strat ||= 2
+    strat = { :max_retries => strat } if strat.kind_of?(Integer)
+    { :max_time => nil, 
+      :sleep => nil, 
+      :sleep_factor => 1.5, 
+      :sleep_max => nil 
+    }.merge(strat)
+  end
+  
   
   #
   # Changes the URI for this service. Used in setups where several identical 
@@ -57,7 +77,20 @@ class JsonRpcClient
       @proxy_port = @proxy.port
     end
     @uri
-  end     
+  end
+  
+  
+  #
+  # This block handler establishes a local scope for a service retry strategy
+  #
+  def self.retry_strategy(new_strategy)
+    old_strategy = @retry_strategy
+    @retry_strategy = analyze_retry_strategy(new_strategy)
+    yield
+  ensure
+    @retry_strategy = old_strategy
+  end
+
 
   #
   # This allows us to call methods remotely with the same syntax as if they were local.
@@ -71,27 +104,49 @@ class JsonRpcClient
   def self.method_missing(name, *args)
     system_describe unless (@no_auto_config || @service_description)
     name = name.to_s
-    @logger.debug "JSON-RPC call: #{self}.#{name}(#{args.join(',')})" if @logger
-    req_wrapper = @get_procs.include?(name) ? Get.new(self, name, args) : Post.new(self, name, args)
+    @logger.debug "JSON-RPC call (#{host_and_port}): #{self}.#{name}(#{args.inspect})" if @logger
+    req_wrapper = @get_procs.include?(name) ? Get.new(self, name, args) : 
+                                              Post.new(self, name, args, @uri_encode_post_bodies)
     req = req_wrapper.req
+    remaining_retries = @retry_strategy[:max_retries]
+    started_at = Time.now
+    sleep_time = @retry_strategy[:sleep]
     begin
       begin
         Net::HTTP.start(@host, @port, @proxy_host, @proxy_port) do |http|
           res = http.request req
           if res.content_type != 'application/json'
-            @logger.debug "JSON-RPC server returned non-JSON data: #{res.body}" if @logger
-            raise NotAService, "Returned #{res.content_type} (status code #{res.code}: #{res.message}) rather than application/json"
+            @logger.debug "JSON-RPC server (#{host_and_port}) returned non-JSON data: #{res.body}" if @logger
+            raise GatewayTimeout,     "#{res.message} (#{host_and_port})" if res.code == 504 || res.code == "504"
+            raise ServiceUnavailable, "#{res.message} (#{host_and_port})" if res.code == 503 || res.code == "503"
+            raise NotAService,        "Returned #{res.content_type} (status code #{res.code}: #{res.message}) (#{host_and_port}) rather than application/json"
           end
           json = JSON.parse(res.body) rescue raise(ServiceReturnsJunk)
-          raise ServiceError, "JSON-RPC error #{json['error']['code']}: #{json['error']['message']}" if json['error']
-          @logger.debug "JSON-RPC result: #{self.class}.#{name} => #{res.body}" if @logger
-          return (block_given? ? yield(json['result']) : json['result'])
+          raise ServiceError, "JSON-RPC error #{json['error']['code']} (#{host_and_port}): #{json['error']['message']}" if json['error']
+          @logger.debug "JSON-RPC result (#{host_and_port}): #{self.class}.#{name} => #{res.body}" if @logger
+          return json['result']
         end
       rescue Errno::ECONNREFUSED
-        raise ServiceDown, "Connection refused"
+        raise ServiceDown, "Connection refused (#{host_and_port})"
+      rescue ::Timeout::Error
+        raise ServerTimeout, "Server timeout (#{host_and_port})"
       end
+    rescue RetriableError => e
+      if @retry_strategy[:max_retries]
+        remaining_retries -= 1
+        raise e if remaining_retries < 0
+      end
+      if @retry_strategy[:max_time] && (Time.now >= (started_at + @retry_strategy[:max_time]))
+        raise e
+      end
+      if sleep_time
+        sleep(sleep_time)
+        sleep_time = sleep_time * @retry_strategy[:sleep_factor] if @retry_strategy[:sleep_factor]
+        sleep_time = [sleep_time, @retry_strategy[:sleep_max]].min if @retry_strategy[:sleep_max]   
+      end
+      retry  
     rescue Exception => e
-      block_given? ? yield(e) : raise(e)
+      raise(e)
     end
   end
       
@@ -135,8 +190,8 @@ class JsonRpcClient
   def self.system_describe
     @service_description = :in_progress
     @service_description = method_missing('system.describe')
-    raise "JSON-RPC server failed to return a service description" unless @service_description
-    raise "JSON-RPC server failed to return a standard-compliant service description" unless @service_description['procs'].kind_of?(Array)
+    raise "JSON-RPC server (#{host_and_port}) failed to return a service description" unless @service_description
+    raise "JSON-RPC server (#{host_and_port}) failed to return a standard-compliant service description" unless @service_description['procs'].kind_of?(Array)
     @service_description['procs'].each do |p|
       @post_procs << p['name']
       @get_procs << p['name'] if p['idempotent']
@@ -177,6 +232,7 @@ class JsonRpcClient
   # in the arglist.  
   #
   class Get < Request
+
     def initialize(klass, name, args)
       if args.length == 0
         query = ''
@@ -201,7 +257,7 @@ class JsonRpcClient
       @req = Net::HTTP::Get.new(uri)
       super()
     end
-    
+
   end
   
   
@@ -217,14 +273,21 @@ class JsonRpcClient
   #
   class Post < Request
     
-    def initialize(klass, name, args)
+    def initialize(klass, name, args, uri_encode)
       @req = Net::HTTP::Post.new(klass.service_path)
       super()
       @req.add_field 'Content-Type', 'application/json'
       args = args[0] if args.length == 1 && args[0].is_a?(Hash)
       body = { :version => '1.1', :method => name, :params => args }.to_json
-      @req.body = body
-      klass.logger.debug "JSON-RPC POST request to URI #{klass.host_and_port}#{klass.service_path} with body #{body}" if klass.logger
+      @req.body = uri_encode ? Post.uri_escape_sanely(body) : body
+      klass.logger.debug "JSON-RPC POST request #{uri_encode ? '(with URI encoded body) ' : ''}to URI #{klass.host_and_port}#{klass.service_path} with body #{body}" if klass.logger
+    end
+    
+    
+    OUR_UNSAFE = /[^ _\.!~*'()a-zA-Z\d;\/?:@&=+$,{}\"-]/nm unless defined?(OUR_UNSAFE)
+ 
+    def self.uri_escape_sanely(str)
+      URI.escape(str, OUR_UNSAFE).gsub('%5B', '[').gsub('%5D', ']')  # Ruby's regexes are BRAIN-DEAD.
     end
     
   end

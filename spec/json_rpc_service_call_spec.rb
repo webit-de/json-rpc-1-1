@@ -23,34 +23,34 @@ describe JsonRpcService do
       @request.env['HTTP_USER_AGENT'] = nil
       req = FooController.service.process @request, {:method => ['add']}
       req.status_code.should == 500
-      req.response.should == "{\"version\": \"1.1\", \"error\": {\"code\":999,\"name\":\"JSONRPCError\",\"message\":\"User-Agent header not specified\"}}\n"
+      JSON.parse(req.response).should == {"error"=>{"message"=>"User-Agent header not specified", "name"=>"JSONRPCError", "code"=>999}, "version"=>"1.1"}
     end
   
     it "should require a HTTP Accept header specifying JSON" do
       @request.env['HTTP_ACCEPT'] = 'application/text'
       req = FooController.service.process @request, {:method => ['add']}
       req.status_code.should == 500
-      req.response.should == "{\"version\": \"1.1\", \"error\": {\"code\":999,\"name\":\"JSONRPCError\",\"message\":\"Accept header must be application\\/json\"}}\n"
+      JSON.parse(req.response).should == {"error"=>{"message"=>"Accept header must be application/json", "name"=>"JSONRPCError", "code"=>999}, "version"=>"1.1"}
     end
     
     it "should be able to add two strings" do
       req = FooController.service.process @request, {:method => ['add']}
       req.status_code.should be_nil
-      req.response.should == "{\"version\": \"1.1\", \"result\": \"1223\"}\n"
+      JSON.parse(req.response).should == {"result"=>"1223", "version"=>"1.1"}
     end
 
     it "should aggregate multiple occurrences of the same arg name" do
       @request.env['QUERY_STRING'] = 'x=AAA&y=BBB&y=CCCCCC&x=DDDDDD'
       req = FooController.service.process @request, {:method => ['add']}
       req.status_code.should be_nil
-      req.response.should == "{\"version\": \"1.1\", \"result\": [\"AAA\",\"DDDDDD\",\"BBB\",\"CCCCCC\"]}\n"
+      JSON.parse(req.response).should == {"result"=>["AAA", "DDDDDD", "BBB", "CCCCCC"], "version"=>"1.1"}
     end
 
     it "should handle named args" do
       @request.env['QUERY_STRING'] = 'y=223&x=1'
       req = FooController.service.process @request, {:method => ['add']}
       req.status_code.should be_nil
-      req.response.should == "{\"version\": \"1.1\", \"result\": \"1223\"}\n"
+      JSON.parse(req.response).should == {"result"=>"1223", "version"=>"1.1"}
     end
     
     it "should also be callable using POST" do
@@ -60,7 +60,7 @@ describe JsonRpcService do
       @request.env['RAW_POST_DATA'] = '{"version": "1.1", "method": "add", "params": ["100", "33"]}'
       req = FooController.service.process @request, {:method => ['add']}
       req.status_code.should be_nil
-      req.response.should == "{\"version\": \"1.1\", \"result\": \"10033\"}\n"
+      JSON.parse(req.response).should == {"result"=>"10033", "version"=>"1.1"}
     end
 
   end
@@ -89,69 +89,69 @@ describe JsonRpcService do
       @request.env['QUERY_STRING'] = 'x=12&y=23'
       req = FooController.service.process @request, {:method => ['sub']}
       req.status_code.should == 500
-      req.response.should == "{\"version\": \"1.1\", \"error\": {\"code\":999,\"name\":\"JSONRPCError\",\"message\":\"This method is not idempotent and can only be called using POST.\"}}\n"
+      JSON.parse(req.response).should == {"error"=>{"message"=>"This method is not idempotent and can only be called using POST.", "name"=>"JSONRPCError", "code"=>999}, "version"=>"1.1"}
     end
   
     it "should require POST data specifying a version" do
       @request.env['RAW_POST_DATA'] = '{"method": "add", "params": [10, 25]}'
       req = FooController.service.process @request, {:method => ['sub']}
       req.status_code.should == 500
-      req.response.should == "{\"version\": \"1.1\", \"error\": {\"code\":999,\"name\":\"JSONRPCError\",\"message\":\"JSON-RPC client protocol version must be specified in POSTs\"}}\n"
+      JSON.parse(req.response).should == {"error"=>{"message"=>"JSON-RPC client protocol version must be specified in POSTs", "name"=>"JSONRPCError", "code"=>999}, "version"=>"1.1"}
     end
 
     it "should handle positional arguments" do
       req = FooController.service.process @request, {:method => ['sub']}
       req.status_code.should be_nil
-      req.response.should == "{\"version\": \"1.1\", \"result\": 67}\n"
+      JSON.parse(req.response).should == {"result"=>67, "version"=>"1.1"}
     end
     
     it "should handle named arguments" do
       @request.env['RAW_POST_DATA'] = '{"version": "2.99", "method": "sub", "params": {"y": 33, "x": 100}}'
       req = FooController.service.process @request, {:method => ['sub']}
       req.status_code.should be_nil
-      req.response.should == "{\"version\": \"1.1\", \"result\": 67}\n"
+      JSON.parse(req.response).should == {"result"=>67, "version"=>"1.1"}
     end
 
     it "should handle arguments with numerical order" do
       @request.env['RAW_POST_DATA'] = '{"version": "2.99", "method": "sub", "params": {"1": 33, "0": 100}}'
       req = FooController.service.process @request, {:method => ['sub']}
       req.status_code.should be_nil
-      req.response.should == "{\"version\": \"1.1\", \"result\": 67}\n"
+      JSON.parse(req.response).should == {"result"=>67, "version"=>"1.1"}
     end
 
     it "should handle mixed arguments" do
       @request.env['RAW_POST_DATA'] = '{"version": "2.99", "method": "sub", "params": {"y": 33, "0": 100}}'
       req = FooController.service.process @request, {:method => ['sub']}
       req.status_code.should be_nil
-      req.response.should == "{\"version\": \"1.1\", \"result\": 67}\n"
+      JSON.parse(req.response).should == {"result"=>67, "version"=>"1.1"}
     end
 
     it "should require a Content-Type header specifying JSON" do
       @request.env['CONTENT_TYPE'] = 'application/html'
       req = FooController.service.process @request, {:method => ['sub']}
       req.status_code.should == 500
-      req.response.should == "{\"version\": \"1.1\", \"error\": {\"code\":999,\"name\":\"JSONRPCError\",\"message\":\"Content-Type header must be application\\/json\"}}\n"
+      JSON.parse(req.response).should == {"error"=>{"message"=>"Content-Type header must be application/json", "name"=>"JSONRPCError", "code"=>999}, "version"=>"1.1"}
     end
 
     it "should require POST data specifying the method to call" do
       @request.env['RAW_POST_DATA'] = '{"version": "2.99", "params": [10, 25]}'
       req = FooController.service.process @request, {:method => ['sub']}
       req.status_code.should == 500
-      req.response.should == "{\"version\": \"1.1\", \"error\": {\"code\":999,\"name\":\"JSONRPCError\",\"message\":\"Method not specified\"}}\n"
+      JSON.parse(req.response).should == {"error"=>{"message"=>"Method not specified", "name"=>"JSONRPCError", "code"=>999}, "version"=>"1.1"}
     end
 
     it "should require POST data specifying an existing method to call" do
       @request.env['RAW_POST_DATA'] = '{"version": "2.99", "method": "zzz", "params": [10, 25]}'
       req = FooController.service.process @request, {:method => ['sub']}
       req.status_code.should == 500
-      req.response.should == "{\"version\": \"1.1\", \"error\": {\"code\":999,\"name\":\"JSONRPCError\",\"message\":\"This JSON-RPC service does not provide a 'zzz' method.\"}}\n"
+      JSON.parse(req.response).should == {"error"=>{"message"=>"This JSON-RPC service does not provide a 'zzz' method.", "name"=>"JSONRPCError", "code"=>999}, "version"=>"1.1"}
     end
     
     it "should barf on missing numerical arguments" do
       @request.env['RAW_POST_DATA'] = '{"version": "2.99", "method": "sub", "params": [10]}'
       req = FooController.service.process @request, {:method => ['sub']}
       req.status_code.should == 500
-      req.response.should == "{\"version\": \"1.1\", \"error\": {\"code\":999,\"name\":\"JSONRPCError\",\"message\":\"The arg y must be numeric (was null)\"}}\n"
+      JSON.parse(req.response).should == {"error"=>{"message"=>"The arg y must be numeric (was null)", "name"=>"JSONRPCError", "code"=>999}, "version"=>"1.1"}
     end
 
     it "should barf on excess arguments" do
@@ -164,7 +164,7 @@ describe JsonRpcService do
       @request.env['RAW_POST_DATA'] = '{"version": "2.99", "method": "sub", "params": {"y": 10, "x": "blah"}}'
       req = FooController.service.process @request, {:method => ['sub']}
       req.status_code.should == 500
-      req.response.should == "{\"version\": \"1.1\", \"error\": {\"code\":999,\"name\":\"JSONRPCError\",\"message\":\"The arg x must be numeric (was \\\"blah\\\")\"}}\n"
+      JSON.parse(req.response).should == {"error"=>{"message"=>"The arg x must be numeric (was \"blah\")", "name"=>"JSONRPCError", "code"=>999}, "version"=>"1.1"}
     end
 
   end
@@ -190,7 +190,7 @@ describe JsonRpcService do
       @request.env['REQUEST_METHOD'] = 'PUT'
       req = FooController.service.process @request, {:method => ['add']}
       req.status_code.should == 500
-      req.response.should == "{\"version\": \"1.1\", \"error\": {\"code\":999,\"name\":\"JSONRPCError\",\"message\":\"Only POST and GET supported\"}}\n"
+      JSON.parse(req.response).should == {"error"=>{"message"=>"Only POST and GET supported", "name"=>"JSONRPCError", "code"=>999}, "version"=>"1.1"}
     end
     
   end  

@@ -65,6 +65,7 @@ route string must end with '/*method'. In future versions there might be a helpe
 create JSON-RPC routes, but as yet that piece of syntactic sugar is not available.
 
 
+
 == Client Side
 
 The client side of things is the module JsonRpcClient. To connect to a service as defined
@@ -94,14 +95,119 @@ slower.
 
 Also note that your JSON-RPC client class, "Yonder" in this example, never is instantiated.
 
-You can also pass a one-argument block to a remote procedure call:
 
-	Yonder.foo(bar, baz) { |x| x.kind_of?(Exception) ? scream(x) : process(x) }
+== Client side retries
+
+When a retriable failure occurs (e.g. the service is down server-side), by default a total of
+three tries are attempted. You can modify this by passing a parameter to +json_rpc_service+,
++:retries+. This may be an integer specifying the number of retries to perform after the initial
+one (thus this figure is always one less than the total number of tries made.)
+
+However, +:retries+ may also be a hash with the following possible components:
+
+	:max_retries			The total number of retries or nil (= infinite). Default: 2.
+	:max_time       		The total number of seconds allowed for retries starting from
+							  the beginning of the whole operation. Default: nil (no limit).
+	:sleep                  The number of seconds to wait between retries.
+							  Default: nil (don't wait).
+    :sleep_factor           A factor with which to multiply the sleep time after each
+							  sleep period. Default: 1.5.
+	:sleep_max     			Ceiling value for the modified sleep time.
+							  Default: nil (no upper limit).
+							
+Thus, if you specify nil or leave out +:retries+ altogether, the JSON-RPC client will do three tries
+without waiting in between, after which the operation will fail with the original exception.
+
+You can also change the retry parameters locally - per service - by using the class method 
++retry_strategy+:
+
+	Yonder.retry_strategy(:sleep => 5.0, :sleep_factor => 2.0, :sleep_max => 5.minutes) do
+	  Yonder.sum 24, 6
+	end
+
+
+== Asynchronous queueing of client-side requests
+
+It is possible to execute code asynchronously in other processes. This is not limited to JSON-RPC
+calls. Any code involving ActiveRecord classes and instances can be enqueued for execution using
+the simple method +enqueue+. It is possible to specify jobs consisting of any number of discrete
+steps. For each job step, it is possible to specify rollback operations to execute in case the
+job step fails, with configurable retry counts and much more. It is also possible to specify 
+failure handlers for jobs which fail entirely.
+
+The basic syntax is as follows:
+
+	enqueue({job-step-1}, {job-step-2}, ... {job-step-n},
+	        :job-config-param-1,
+	        :job-config-param-2,
+	        ...
+	        :job-config-param-n)
 	
-If a block is present, the result of executing +foo+ on +bar+ and +baz+ will be yielded to the
-block. However, if for any reason an exception should occur at any point, including HTTP setup,
-remote evaluation or decoding of the JSON reply, the block will instead receive the exception.
-This allows you to program continuation style, or to implement execution queues for retries, etc.
+The method +enqueue+ always returns true. This means that you cannot retrieve the result of the
+job by normal means. If it's needed (which rarely is the case), you must use a job step to do so.
+
+Here's a simple example of an +enqueue+ call:
+
+	enqueue :target => @user, :do => :do_something, :do_args => [x, [1, 2, 3], User.find(xxx)]
+	
+This will set up a call to +user.do_something(x, [1,2,3], <some_user>)+ in another process.
+
+Each job step may have a single ActiveRecord object as its target, but it is also possible to
+invoke class methods:
+
+	enqueue :target => MyClass, :do => :some_class_method
+	
+And of course, if there is more than one job step:
+
+	enqueue({ :target => myobj, :do => :a_myobj_method, :do_args => ['foo'] },
+	        { :target => other, :do => :foo },
+	        { :target => myobj, :do => :something_final })
+	
+Please note that all args and targets are retrieved fresh from the database for each job step.
+Thus the two references to +myobj+ in the above code are not the same object in memory, but
+two distinct instances (which of course still may be identical).
+	
+Each job step can take the following key/value pairs:
+
+	:target			An ActiveRecord class or instance
+	:do      		A symbol naming the method to invoke on the target
+	:do_args		An array of arguments to pass to the invoked method. ActiveRecord instances
+						and classes may appear in this array, but only on the top level.
+	:rollback		A symbol naming a method to invoke on the target in case the +:do+ operation
+					    fails (i.e. an exception is raised).
+	:rollback_args  An array of arguments to pass to the invoked rollback method. The same
+						rules as for +:do_args+ apply to +:rollback_args+.
+	:tries          An integer which specifies the total number of tries to be performed for 
+	                    this job step. Defaults to 3 (but if there is a :tries value defined
+						for the whole job, then that value is used instead - more on this 
+						further down).
+
+Job configuration parameters can be specified as the last hash in the +enqueue+ call (which
+thus may either be a job step or a hash of job configuration parameters - and remember that
+any "loose" symbol/value pairs in any Ruby method call will be grouped together as a hash).
+
+The job configuration parameters can be any or all of the following:
+
+	:target			An ActiveRecord class or instance (only used with :on_failure)
+	:on_failure		A symbol naming the method to invoke on the target if the operation fails.
+						Any exceptions generated by the :on_failure call are suppressed silently.
+	:failure_args   An array of arguments to pass to the +:on_failure+ handler. The same
+						restrictions apply to this argument list as to the :do_args and
+						:rollback_args argument lists.
+	:tries			An integer which specifies the default total number of tries to be performed 
+						for each job step (and which can be overridden individually in each
+						job step). Defaults to nil.
+	:unordered      If true, the job is permitted to execute in parallel with any other job.
+						If false (the default), the job is *ordered*, meaning it will execute 
+						in strict order compared to all other ordered jobs. Only one ordered
+						job will be permitted to execute at one time. This means you can depend
+						on the results of one ordered job for any following job.
+	:synchronous	Normally false. If true, it overrides the value of :unordered and will
+						cause all calls to +enqueue+ to be performed synchronously. This is
+						the default value in the test and build environments.
+						
+						
+
 
 
 === Service Description

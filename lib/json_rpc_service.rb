@@ -2,9 +2,7 @@
 # This is the JSON-RPC Service.
 #
 module JsonRpcService
-      
-  require 'json'
-      
+            
   def self.included(base)
     base.extend ClassMethods
   end
@@ -66,7 +64,7 @@ module JsonRpcService
       render :text => req.response, :status => req.status_code
     end
   end
-  
+
 
   #
   # This class defines the server side of the JSON-RPC protocol handler.
@@ -390,7 +388,7 @@ module JsonRpcService
           super service, req, par
           set_error(999, "Content-Type header must be application/json") and return unless req.env['CONTENT_TYPE'] == 'application/json'
           begin
-            body = JSON.parse req.raw_post
+            body = JSON.parse(req.raw_post) rescue JSON.parse(URI.decode(req.raw_post))
           rescue Exception => e
             set_error 999, "JSON did not parse" 
             return
