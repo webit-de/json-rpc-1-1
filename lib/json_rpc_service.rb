@@ -255,7 +255,7 @@ module JsonRpcService
           arg_named = @args_named.delete argname
           arg_numbered = @args_named.delete i.to_s
           set_error(999, "You cannot set the parameter #{argname} both by name and position") and return if arg_named && arg_numbered
-          arg = @args_pos[i] || arg_named || arg_numbered
+          arg = (!@args_pos[i].nil? ? @args_pos[i] : (!arg_named.nil? ? arg_named : arg_numbered))
           # Type-check arg
           case argtype
           when 'bit'
