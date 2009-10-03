@@ -45,7 +45,7 @@
 #                            a worker was stopped, false if not.
 #
 
-require 'openstruct'
+require 'openstruct' rescue (require 'ostruct')
 require 'job'
 require 'job_step'
 require 'fileutils'
