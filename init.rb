@@ -2,7 +2,7 @@
 
 require 'json/ext'
 require 'json/add/rails'
-require 'openstruct'
+require 'openstruct' rescue (require 'ostruct')
 
 require 'job'
 require 'job_step'
