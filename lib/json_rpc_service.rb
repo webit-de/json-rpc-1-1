@@ -196,7 +196,7 @@ module JsonRpcService
         elsif req.post?
           Post.new service, req, par
         else
-          Erroneous.new service, req, par, 999, 'Only POST and GET supported'
+          Erroneous.new service, req, par, -32600, 'Only POST and GET supported'
         end
       end
 
@@ -220,8 +220,8 @@ module JsonRpcService
         @result = nil
         @error = nil
         @status_code = nil          # Set to non-NIL if not 200
-        set_error(999, "User-Agent header not specified") and return unless req.env['HTTP_USER_AGENT']
-        set_error(999, "Accept header must be application/json") and return unless req.env['HTTP_ACCEPT'] == 'application/json'
+        set_error(-32600, "User-Agent header not specified") and return unless req.env['HTTP_USER_AGENT']
+        set_error(-32600, "Accept header must be application/json") and return unless req.env['HTTP_ACCEPT'] == 'application/json'
       end
     
     
@@ -245,7 +245,7 @@ module JsonRpcService
       def canonicalise_args(fun)
         procpars = fun[:params] || {}
         if procpars.size == 0 && @args_named.size > 0
-          set_error 999, "Parameters passed to method declared to take none."
+          set_error -32602, "Invalid params."
           return
         end
         # Go through the declared arglist and populate the positional arglist
@@ -254,12 +254,12 @@ module JsonRpcService
           argtype = pp[:type]
           arg_named = @args_named.delete argname
           arg_numbered = @args_named.delete i.to_s
-          set_error(999, "You cannot set the parameter #{argname} both by name and position") and return if arg_named && arg_numbered
+          set_error(-32602, "You cannot set the parameter #{argname} both by name and position") and return if arg_named && arg_numbered
           arg = (!@args_pos[i].nil? ? @args_pos[i] : (!arg_named.nil? ? arg_named : arg_numbered))
           # Type-check arg
           case argtype
           when 'bit'
-            set_error(999, "The arg #{argname} must be literally true or false (was #{arg.to_json})") and return unless arg == true || arg == false
+            set_error(-32602, "The arg #{argname} must be literally true or false (was #{arg.to_json})") and return unless arg == true || arg == false
           when 'num'
             if !arg.is_a?(Numeric)
               if arg.is_a?(String) && (arg_conv = arg.to_i rescue nil).to_s == arg
@@ -267,7 +267,7 @@ module JsonRpcService
               elsif arg.is_a?(String) && (arg_conv = arg.to_f rescue nil).to_s == arg
                 arg = arg_conv
               else
-                set_error(999, "The arg #{argname} must be numeric (was #{arg.to_json})") 
+                set_error(-32602, "The arg #{argname} must be numeric (was #{arg.to_json})") 
                 return
               end
             end
@@ -276,20 +276,20 @@ module JsonRpcService
               if arg.is_a?(Numeric)
                 arg = arg.to_s
               else
-                set_error(999, "The arg #{argname} must be a string (was #{arg.to_json})")
+                set_error(-32602, "The arg #{argname} must be a string (was #{arg.to_json})")
                 return
               end
             end
           when 'arr'
-            set_error(999, "The arg #{argname} must be an array (was #{arg.to_json})") and return unless arg.is_a?(Array)
+            set_error(-32602, "The arg #{argname} must be an array (was #{arg.to_json})") and return unless arg.is_a?(Array)
           when 'obj'
-            set_error(999, "The arg #{argname} must be a JSON object (was #{arg.to_json})") and return unless arg.is_a?(Hash)
+            set_error(-32602, "The arg #{argname} must be a JSON object (was #{arg.to_json})") and return unless arg.is_a?(Hash)
           end
           # Set the positional arg
           @args_pos[i] ||= arg
         end
         # The positional arglist should now be populated. The named arglist should be exhausted.
-        set_error(999, "Excess parameters passed (#{@args_named.to_json})") and return unless @args_named.size == 0
+        set_error(-32602, "Excess parameters passed (#{@args_named.to_json})") and return unless @args_named.size == 0
       end
       
 
@@ -300,14 +300,14 @@ module JsonRpcService
         return if @error
         fun = @service.procs[@fun]
         get = self.is_a?(Get)
-        set_error(999, "This JSON-RPC service does not provide a '#{@fun}' method.", (get ? 404 : 500)) and return unless fun
-        set_error(999, "This method is not idempotent and can only be called using POST.") and return if get && !fun[:idempotent]
+        set_error(-32601, "This JSON-RPC service does not provide a '#{@fun}' method.", (get ? 404 : 500)) and return unless fun
+        set_error(-32600, "This method is not idempotent and can only be called using POST.") and return if get && !fun[:idempotent]
         canonicalise_args fun
         return if @error
         begin
           @result = fun[:proc].call *@args_pos
         rescue Exception => e
-          set_error 999, e.message # + e.backtrace.join("\n")
+          set_error -32603, e.message # + e.backtrace.join("\n")
         end
         # If the procedure return type is the string "nil", return nothing
         @result = nil if fun[:return][:type] == 'nil'
@@ -341,7 +341,7 @@ module JsonRpcService
           @fun = par[:method]
           par.delete 'method'       # We don't want this in our arg list
           super service, req, par
-          set_error 999, "Bad call" and return unless @fun.length == 1
+          set_error -32600, "Invalid request." and return unless @fun.length == 1
           @fun = @fun[0]
           query_string = get_query_string 
           return if query_string.blank?
@@ -386,17 +386,17 @@ module JsonRpcService
       class Post < Request
         def initialize(service, req, par)
           super service, req, par
-          set_error(999, "Content-Type header must be application/json") and return unless req.env['CONTENT_TYPE'] == 'application/json'
+          set_error(-32600, "Content-Type header must be application/json") and return unless req.env['CONTENT_TYPE'] == 'application/json'
           begin
             body = JSON.parse(req.raw_post) rescue JSON.parse(URI.decode(req.raw_post))
           rescue Exception => e
-            set_error 999, "JSON did not parse" 
+            set_error -32700, "Parse error." 
             return
           end
-          set_error 999, 'JSON-RPC client protocol version must be specified in POSTs' and return unless body["version"]
+          set_error -32600, 'JSON-RPC client protocol version must be specified in POSTs' and return unless body["version"]
           @id = body["id"]
           @fun = body["method"]
-          set_error 999, 'Method not specified' and return unless @fun
+          set_error -32600, 'Method not specified' and return unless @fun
           args = body["params"]
           case args
           when Array
@@ -404,7 +404,7 @@ module JsonRpcService
           when Hash
             @args_named = args
           else
-            set_error 999, 'Params must be JSON Object or Array' and return if args && !args.is_a?(Hash) && !args.is_a?(Array)
+            set_error -32602, 'Params must be JSON Object or Array' and return if args && !args.is_a?(Hash) && !args.is_a?(Array)
           end
         end
       end
