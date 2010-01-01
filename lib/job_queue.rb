@@ -45,12 +45,7 @@
 #                            a worker was stopped, false if not.
 #
 
-begin
-  require 'openstruct' 
-rescue LoadError
-  require 'ostruct'
-end
-
+require 'ostruct'
 require 'job'
 require 'job_step'
 require 'fileutils'
@@ -327,6 +322,7 @@ class JobQueue < OpenStruct
     # This is the main worker event loop  
     #
     def worker_loop(host, pid, ppid)
+      ActiveRecord::Base.verify_active_connections!   # This is a hack - find out why it's needed. / PB
       loop do
         (job = claim(host, pid)) ? job.run(self) : no_job_available
         break unless (Process.getpgid(ppid) rescue nil)  # Die if the parent is gone

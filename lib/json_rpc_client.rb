@@ -99,12 +99,14 @@ class JsonRpcClient
   # to the JSON-RPC 1.1 specifications. You can pass a block to each call. If you do,
   # the block will be yielded to using the return value of the call, or, if there is
   # an exception, with the exception itself. This allows you to implement execution 
-  # queues or continuation style error handling, amongst other things. 
+  # queues or continuation style error handling, amongst other things.
+  #
+  # DO NOT add more logging to this method for debugging purposes. It slows things down
+  # quite considerably.
   #
   def self.method_missing(name, *args)
     system_describe unless (@no_auto_config || @service_description)
     name = name.to_s
-    @logger.debug "JSON-RPC call (#{host_and_port}): #{self}.#{name}(#{args.inspect})" if @logger
     req_wrapper = @get_procs.include?(name) ? Get.new(self, name, args) : 
                                               Post.new(self, name, args, @uri_encode_post_bodies)
     req = req_wrapper.req
@@ -116,14 +118,17 @@ class JsonRpcClient
         Net::HTTP.start(@host, @port, @proxy_host, @proxy_port) do |http|
           res = http.request req
           if res.content_type != 'application/json'
-            @logger.debug "JSON-RPC server (#{host_and_port}) returned non-JSON data: #{res.body}" if @logger
+            @logger.debug "JSON-RPC server at #{host_and_port} returned non-JSON data: #{res.body}" if @logger
             raise GatewayTimeout,     "#{res.message} (#{host_and_port})" if res.code == 504 || res.code == "504"
             raise ServiceUnavailable, "#{res.message} (#{host_and_port})" if res.code == 503 || res.code == "503"
             raise NotAService,        "Returned #{res.content_type} (status code #{res.code}: #{res.message}) (#{host_and_port}) rather than application/json"
           end
           json = JSON.parse(res.body) rescue raise(ServiceReturnsJunk)
-          raise ServiceError, "JSON-RPC error #{json['error']['code']} (#{host_and_port}): #{json['error']['message']}" if json['error']
-          @logger.debug "JSON-RPC result (#{host_and_port}): #{self.class}.#{name} => #{res.body}" if @logger
+          if json['error']
+            @logger.error "JSON-RPC call to #{host_and_port}: #{self}.#{name}(#{args.inspect})" if @logger
+            @logger.error "JSON-RPC error from #{host_and_port}: #{json['error'].inspect}" if @logger
+            raise ServiceError, "JSON-RPC error from #{host_and_port}: #{json['error'].inspect}"
+          end
           return json['result']
         end
       rescue Errno::ECONNREFUSED

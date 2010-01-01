@@ -1,5 +1,5 @@
-# see activerecord/lib/active_record/connection_adaptors/abstract/connection_specification.rb
-if defined? ActiveRecord::Base
+if defined? ActiveRecord::Base  # patching patch (!!) for Rails projects without ActiveRecord
+  # see activerecord/lib/active_record/connection_adaptors/abstract/connection_specification.rb
   class ActiveRecord::Base
     # reconnect without disconnecting
     if Spawn::RAILS_2_2
@@ -57,33 +57,51 @@ if defined? Mongrel::HttpServer
     # the socket that is being used so Spawn can close it upon forking
     alias_method :orig_process_client, :process_client
     def process_client(client)
-      Spawn.resource_to_close(client)
-      Spawn.resource_to_close(@socket)
+      Spawn.resources_to_close(client, @socket)
       orig_process_client(client)
     end
   end
 end
 
-# Patch for work with passenger < 2.1.0
-if defined? Passenger::Railz::RequestHandler
-  class Passenger::Railz::RequestHandler
-    alias_method :orig_process_request, :process_request
-    def process_request(headers, input, output)
-      Spawn.resource_to_close(input)
-      Spawn.resource_to_close(output)
-      orig_process_request(headers, input, output)
-    end
-  end
+need_passenger_patch = true
+if defined? PhusionPassenger::VERSION_STRING
+  # The VERSION_STRING variable was defined sometime after 2.1.0.
+  # We don't need passenger patch for 2.2.2 or later.
+  pv = PhusionPassenger::VERSION_STRING.split('.').collect{|s| s.to_i}
+  need_passenger_patch = pv[0] < 2 || (pv[0] == 2 && (pv[1] < 2 || (pv[1] == 2 && pv[2] < 2)))
 end
 
-# Patch for work with passenger >= 2.1.0
-if defined? PhusionPassenger::Railz::RequestHandler
-  class PhusionPassenger::Railz::RequestHandler
-    alias_method :orig_process_request, :process_request
-    def process_request(headers, input, output)
-      Spawn.resource_to_close(input)
-      Spawn.resource_to_close(output)
-      orig_process_request(headers, input, output)
+if need_passenger_patch
+  # Patch for work with passenger < 2.1.0
+  if defined? Passenger::Railz::RequestHandler
+    class Passenger::Railz::RequestHandler
+      alias_method :orig_process_request, :process_request
+      def process_request(headers, input, output)
+        Spawn.resources_to_close(input, output)
+        orig_process_request(headers, input, output)
+      end
+    end
+  end
+
+  # Patch for work with passenger >= 2.1.0
+  if defined? PhusionPassenger::Railz::RequestHandler
+    class PhusionPassenger::Railz::RequestHandler
+      alias_method :orig_process_request, :process_request
+      def process_request(headers, input, output)
+        Spawn.resources_to_close(input, output)
+        orig_process_request(headers, input, output)
+      end
+    end
+  end
+
+  # Patch for passenger with Rails >= 2.3.0 (uses rack)
+  if defined? PhusionPassenger::Rack::RequestHandler
+    class PhusionPassenger::Rack::RequestHandler
+      alias_method :orig_process_request, :process_request
+      def process_request(headers, input, output)
+        Spawn.resources_to_close(input, output)
+        orig_process_request(headers, input, output)
+      end
     end
   end
 end

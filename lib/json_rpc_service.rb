@@ -14,7 +14,7 @@ module JsonRpcService
     # method for valid options.
     #
     def json_rpc_service(opts={})
-      session :off
+      session :off if defined?(RAILS_GEM_VERSION) && RAILS_GEM_VERSION.to_f < 2.3
       include JsonRpcService::InstanceMethods
       @service = Service.new opts
     end
@@ -307,7 +307,7 @@ module JsonRpcService
         begin
           @result = fun[:proc].call *@args_pos
         rescue Exception => e
-          set_error 999, e.message + e.backtrace.join("\n")
+          set_error 999, e.message # + e.backtrace.join("\n")
         end
         # If the procedure return type is the string "nil", return nothing
         @result = nil if fun[:return][:type] == 'nil'

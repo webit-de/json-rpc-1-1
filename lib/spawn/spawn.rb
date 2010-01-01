@@ -4,7 +4,7 @@ module Spawn
 
   # default to forking (unless windows or jruby)
   @@method = (RUBY_PLATFORM =~ /(win32|java)/) ? :thread : :fork
-  # socket to close in child process
+  # things to close in child process
   @@resources = []
   # in some environments, logger isn't defined
   @@logger = defined?(RAILS_DEFAULT_LOGGER) ? RAILS_DEFAULT_LOGGER : Logger.new(STDERR)
@@ -25,12 +25,18 @@ module Spawn
     @@resources << resource
   end
 
+  # set the resources to disconnect from in the child process (when forking)
+  def self.resources_to_close(*resources)
+    @@resources = resources
+  end
+
   # close all the resources added by calls to resource_to_close
   def self.close_resources
     @@resources.each do |resource|
       resource.close if resource && resource.respond_to?(:close) && !resource.closed?
     end
-    @@resources = []
+    # in case somebody spawns recursively
+    @@resources.clear
   end
 
   # Spawns a long-running section of code and returns the ID of the spawned process.
