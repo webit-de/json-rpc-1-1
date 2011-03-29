@@ -15,11 +15,11 @@ Usage
 Here's a simple example of how to demonstrate the spawn plugin.
 In one of your controllers, insert this code (after installing the plugin of course):
 
-> spawn do
->   logger.info("I feel sleepy...")
->   sleep 11
->   logger.info("Time to wake up!")
-> end
+>     spawn do
+>      logger.info("I feel sleepy...")
+>      sleep 11
+>      logger.info("Time to wake up!")
+>     end
 
 If everything is working correctly, your controller should finish quickly then you'll see
 the last log message several seconds later.
@@ -27,14 +27,14 @@ the last log message several seconds later.
 If you need to wait for the spawned processes/threads, then pass the objects returned by
 spawn to Spawn::wait(), like this:
 
-> N.times do |i|
->   # spawn N blocks of code
->   spawn\_ids[i] = spawn do
->     something(i)
->   end
-> end
-> # wait for all N blocks of code to finish running
-> wait(spawn\_ids)
+>     N.times do |i|
+>       # spawn N blocks of code
+>       spawn_ids[i] = spawn do
+>         something(i)
+>       end
+>     end
+>     # wait for all N blocks of code to finish running
+>     wait(spawn_ids)
 
 If you want your forked child to run at a lower priority than the parent process, pass in
 the :nice option like this:
