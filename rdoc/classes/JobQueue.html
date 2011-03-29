@@ -1,0 +1,645 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Class: JobQueue</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <link rel="stylesheet" href=".././rdoc-style.css" type="text/css" media="screen" />
+  <script type="text/javascript">
+  // <![CDATA[
+
+  function popupCode( url ) {
+    window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+  }
+
+  function toggleCode( id ) {
+    if ( document.getElementById )
+      elem = document.getElementById( id );
+    else if ( document.all )
+      elem = eval( "document.all." + id );
+    else
+      return false;
+
+    elemStyle = elem.style;
+    
+    if ( elemStyle.display != "block" ) {
+      elemStyle.display = "block"
+    } else {
+      elemStyle.display = "none"
+    }
+
+    return true;
+  }
+  
+  // Make codeblocks hidden by default
+  document.writeln( "<style type=\"text/css\">div.method-source-code { display: none }</style>" )
+  
+  // ]]>
+  </script>
+
+</head>
+<body>
+
+
+
+    <div id="classHeader">
+        <table class="header-table">
+        <tr class="top-aligned-row">
+          <td><strong>Class</strong></td>
+          <td class="class-name-in-header">JobQueue</td>
+        </tr>
+        <tr class="top-aligned-row">
+            <td><strong>In:</strong></td>
+            <td>
+                <a href="../files/lib/job_queue_rb.html">
+                lib/job_queue.rb
+                </a>
+        <br />
+            </td>
+        </tr>
+
+        <tr class="top-aligned-row">
+            <td><strong>Parent:</strong></td>
+            <td>
+                OpenStruct
+            </td>
+        </tr>
+        </table>
+    </div>
+  <!-- banner header -->
+
+  <div id="bodyContent">
+
+
+
+  <div id="contextContent">
+
+
+
+   </div>
+
+    <div id="method-list">
+      <h3 class="section-bar">Methods</h3>
+
+      <div class="name-list">
+      <a href="#M000010">claim</a>&nbsp;&nbsp;
+      <a href="#M000011">complete</a>&nbsp;&nbsp;
+      <a href="#M000012">fail</a>&nbsp;&nbsp;
+      <a href="#M000006">hard_reset</a>&nbsp;&nbsp;
+      <a href="#M000005">job</a>&nbsp;&nbsp;
+      <a href="#M000004">jobs</a>&nbsp;&nbsp;
+      <a href="#M000002">new</a>&nbsp;&nbsp;
+      <a href="#M000007">next_uuid</a>&nbsp;&nbsp;
+      <a href="#M000009">remove</a>&nbsp;&nbsp;
+      <a href="#M000013">start_worker</a>&nbsp;&nbsp;
+      <a href="#M000003">stats</a>&nbsp;&nbsp;
+      <a href="#M000014">stop_worker</a>&nbsp;&nbsp;
+      <a href="#M000008">submit</a>&nbsp;&nbsp;
+      </div>
+    </div>
+
+  </div>
+
+
+    <!-- if includes -->
+    <div id="includes">
+      <h3 class="section-bar">Included Modules</h3>
+
+      <div id="includes-list">
+        <span class="include-name"><a href="Spawn.html">Spawn</a></span>
+      </div>
+    </div>
+
+    <div id="section">
+
+
+
+
+
+      
+
+
+    <!-- if method_list -->
+    <div id="methods">
+      <h3 class="section-bar">Public Class methods</h3>
+
+      <div id="method-M000002" class="method-detail">
+        <a name="M000002"></a>
+
+        <div class="method-heading">
+          <a href="#M000002" class="method-signature">
+          <span class="method-name">new</span><span class="method-args">(options={})</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Sets up the basic data in the PStore DB if not already initialised.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000002-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000002-source">
+<pre>
+    <span class="ruby-comment cmt"># File lib/job_queue.rb, line 63</span>
+63:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">options</span>={})
+64:     <span class="ruby-keyword kw">super</span>({<span class="ruby-identifier">:db_path</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-node">&quot;#{RAILS_ROOT}/db/json_rpc_queue/#{RAILS_ENV}.pstore&quot;</span>,
+65:            <span class="ruby-identifier">:worker_sleep</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span><span class="ruby-value">.1</span>,
+66:            <span class="ruby-identifier">:synchronous</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-keyword kw">false</span>}.<span class="ruby-identifier">merge</span>(<span class="ruby-identifier">options</span>))
+67:     <span class="ruby-identifier">dbp</span> = <span class="ruby-constant">File</span>.<span class="ruby-identifier">expand_path</span> <span class="ruby-identifier">db_path</span>
+68:     <span class="ruby-constant">FileUtils</span>.<span class="ruby-identifier">mkdir_p</span>(<span class="ruby-constant">File</span>.<span class="ruby-identifier">dirname</span>(<span class="ruby-identifier">dbp</span>))
+69:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">db</span> = <span class="ruby-constant">PStore</span>.<span class="ruby-identifier">new</span> <span class="ruby-identifier">dbp</span>
+70:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">db</span>.<span class="ruby-identifier">transaction</span> <span class="ruby-keyword kw">do</span>
+71:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_unordered</span>] = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_unordered</span>] <span class="ruby-operator">||</span> []
+72:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_ordered</span>] = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_ordered</span>] <span class="ruby-operator">||</span> []
+73:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_ordered</span>] = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_ordered</span>]
+74:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_unordered</span>] = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_unordered</span>] <span class="ruby-operator">||</span> []
+75:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:next_uuid</span>] = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:next_uuid</span>] <span class="ruby-operator">||</span> <span class="ruby-value">1</span>
+76:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:jobs_completed</span>] = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:jobs_completed</span>] <span class="ruby-operator">||</span> <span class="ruby-value">0</span>
+77:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:jobs_failed</span>] = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:jobs_failed</span>] <span class="ruby-operator">||</span> <span class="ruby-value">0</span>
+78:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:total_time_used</span>] = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:total_time_used</span>] <span class="ruby-operator">||</span> <span class="ruby-value">0</span><span class="ruby-value">.0</span>
+79:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:max_processing_time</span>] = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:max_processing_time</span>] <span class="ruby-operator">||</span> <span class="ruby-value">-10000000000000000.0</span>
+80:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:min_processing_time</span>] = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:min_processing_time</span>] <span class="ruby-operator">||</span> <span class="ruby-value">10000000000000000.0</span>
+81:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:workers_in_touch</span>] = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:workers_in_touch</span>] <span class="ruby-operator">||</span> []
+82:     <span class="ruby-keyword kw">end</span>
+83:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">parent_pid</span> = <span class="ruby-keyword kw">nil</span>
+84:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">worker_pid</span> = <span class="ruby-keyword kw">nil</span>
+85:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">detached_checker_thread</span> = <span class="ruby-keyword kw">nil</span>
+86:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-bar">Public Instance methods</h3>
+
+      <div id="method-M000010" class="method-detail">
+        <a name="M000010"></a>
+
+        <div class="method-heading">
+          <a href="#M000010" class="method-signature">
+          <span class="method-name">claim</span><span class="method-args">(host=nil, pid=nil)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Returns the next <a href="Job.html">Job</a> to be processed, if there is
+one available. Nil will be returned if a <a href="Job.html">Job</a> already
+is being processed (processing is strictly sequential and pipelined) or no
+<a href="Job.html">Job</a> is available.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000010-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000010-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/job_queue.rb, line 222</span>
+222:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">claim</span>(<span class="ruby-identifier">host</span>=<span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">pid</span>=<span class="ruby-keyword kw">nil</span>)
+223:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">db</span>.<span class="ruby-identifier">transaction</span> <span class="ruby-keyword kw">do</span>
+224:       <span class="ruby-identifier">record_worker_in_touch</span>(<span class="ruby-identifier">host</span>, <span class="ruby-identifier">pid</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">host</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">pid</span>
+225:       <span class="ruby-identifier">job</span> = <span class="ruby-keyword kw">nil</span>
+226:       <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_ordered</span>]
+227:         <span class="ruby-comment cmt"># If there is an ordered job being processed, choose an unordered job if there is one</span>
+228:         <span class="ruby-identifier">waiting_unordered</span> = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_unordered</span>]
+229:         <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">waiting_unordered</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+230:         <span class="ruby-identifier">job</span> = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">waiting_unordered</span>.<span class="ruby-identifier">first</span>]
+231:         <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_unordered</span>] = <span class="ruby-identifier">waiting_unordered</span>[<span class="ruby-value">1</span><span class="ruby-operator">..</span><span class="ruby-value">-1</span>]
+232:         <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_unordered</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span>
+233:       <span class="ruby-keyword kw">elsif</span> ((<span class="ruby-identifier">waiting_ordered</span> = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_ordered</span>]) <span class="ruby-operator">!=</span> [])
+234:         <span class="ruby-comment cmt"># If no ordered job is being processed, but there is an ordered job waiting, choose it</span>
+235:         <span class="ruby-identifier">job</span> = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">waiting_ordered</span>.<span class="ruby-identifier">first</span>]
+236:         <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_ordered</span>] = <span class="ruby-identifier">waiting_ordered</span>[<span class="ruby-value">1</span><span class="ruby-operator">..</span><span class="ruby-value">-1</span>]
+237:         <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_ordered</span>] = <span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span>
+238:       <span class="ruby-keyword kw">elsif</span> ((<span class="ruby-identifier">waiting_unordered</span> = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_unordered</span>]) <span class="ruby-operator">!=</span> [])
+239:         <span class="ruby-comment cmt"># If no ordered jobs were waiting, choose an unordened one, if available</span>
+240:         <span class="ruby-identifier">job</span> = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">waiting_unordered</span>.<span class="ruby-identifier">first</span>]
+241:         <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_unordered</span>] = <span class="ruby-identifier">waiting_unordered</span>[<span class="ruby-value">1</span><span class="ruby-operator">..</span><span class="ruby-value">-1</span>]
+242:         <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_unordered</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span>
+243:       <span class="ruby-keyword kw">end</span>
+244:       <span class="ruby-comment cmt"># Have we selected a job? If so, adorn it</span>
+245:       <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">job</span>
+246:       <span class="ruby-identifier">job</span>.<span class="ruby-identifier">begun_at</span> = <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>.<span class="ruby-identifier">utc</span>
+247:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span>] = <span class="ruby-identifier">job</span>
+248:       <span class="ruby-identifier">job</span>
+249:     <span class="ruby-keyword kw">end</span>
+250:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000011" class="method-detail">
+        <a name="M000011"></a>
+
+        <div class="method-heading">
+          <a href="#M000011" class="method-signature">
+          <span class="method-name">complete</span><span class="method-args">(job)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+When a <a href="JobQueue.html#M000005">job</a> has been processed
+successfully, this method should be called to <a
+href="JobQueue.html#M000009">remove</a> it from the queues and to allow the
+next <a href="Job.html">Job</a> to be run. This method also updates the
+running statistics.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000011-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000011-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/job_queue.rb, line 258</span>
+258:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">complete</span>(<span class="ruby-identifier">job</span>)
+259:     <span class="ruby-identifier">t</span> = <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>.<span class="ruby-identifier">utc</span>
+260:     <span class="ruby-identifier">elapsed</span> = <span class="ruby-identifier">t</span> <span class="ruby-operator">-</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">begun_at</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">begun_at</span>
+261:     <span class="ruby-identifier">remove</span> <span class="ruby-identifier">job</span>
+262:     <span class="ruby-identifier">job</span>.<span class="ruby-identifier">completed_at</span> = <span class="ruby-identifier">t</span>
+263:     <span class="ruby-identifier">job</span>.<span class="ruby-identifier">elapsed_seconds</span> = <span class="ruby-identifier">elapsed</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">begun_at</span>
+264:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">db</span>.<span class="ruby-identifier">transaction</span> <span class="ruby-keyword kw">do</span> 
+265:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:jobs_completed</span>] <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+266:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:last_job_completed_at</span>] = <span class="ruby-identifier">t</span> 
+267:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:total_time_used</span>] <span class="ruby-operator">+=</span> <span class="ruby-identifier">elapsed</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">begun_at</span>
+268:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:max_processing_time</span>] = <span class="ruby-identifier">elapsed</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">begun_at</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">elapsed</span> <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:max_processing_time</span>]
+269:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:min_processing_time</span>] = <span class="ruby-identifier">elapsed</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">begun_at</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">elapsed</span> <span class="ruby-operator">&lt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:min_processing_time</span>]
+270:     <span class="ruby-keyword kw">end</span>
+271:     <span class="ruby-identifier">job</span>
+272:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000012" class="method-detail">
+        <a name="M000012"></a>
+
+        <div class="method-heading">
+          <a href="#M000012" class="method-signature">
+          <span class="method-name">fail</span><span class="method-args">(job)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+When a <a href="JobQueue.html#M000005">job</a> has failed completely and
+has been abandoned, this method should be called to <a
+href="JobQueue.html#M000009">remove</a> it from the queues and to allow the
+next <a href="Job.html">Job</a> to be run. This method also updates the
+running statistics.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000012-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000012-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/job_queue.rb, line 280</span>
+280:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">fail</span>(<span class="ruby-identifier">job</span>)
+281:     <span class="ruby-identifier">remove</span> <span class="ruby-identifier">job</span>
+282:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">db</span>.<span class="ruby-identifier">transaction</span> <span class="ruby-keyword kw">do</span>
+283:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:jobs_failed</span>] <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+284:     <span class="ruby-keyword kw">end</span>
+285:   <span class="ruby-keyword kw">rescue</span> <span class="ruby-constant">Exception</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">e</span>
+286:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000006" class="method-detail">
+        <a name="M000006"></a>
+
+        <div class="method-heading">
+          <a href="#M000006" class="method-signature">
+          <span class="method-name">hard_reset</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Kills everything in the DB and resets it to its empty state.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000006-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000006-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/job_queue.rb, line 140</span>
+140:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">hard_reset</span>
+141:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">db</span>.<span class="ruby-identifier">transaction</span> <span class="ruby-keyword kw">do</span>
+142:       <span class="ruby-identifier">db</span>.<span class="ruby-identifier">roots</span>.<span class="ruby-identifier">each</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">x</span><span class="ruby-operator">|</span> <span class="ruby-identifier">db</span>.<span class="ruby-identifier">delete</span> <span class="ruby-identifier">x</span> }
+143:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_ordered</span>] = []
+144:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_unordered</span>] = []
+145:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_ordered</span>] = <span class="ruby-keyword kw">nil</span>
+146:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_unordered</span>] = []
+147:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:next_uuid</span>] = <span class="ruby-value">1</span>
+148:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:jobs_completed</span>] = <span class="ruby-value">0</span>
+149:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:jobs_failed</span>] = <span class="ruby-value">0</span>
+150:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:total_time_used</span>] = <span class="ruby-value">0</span><span class="ruby-value">.0</span>
+151:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:max_processing_time</span>] = <span class="ruby-value">-10000000000000000.0</span>
+152:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:min_processing_time</span>] = <span class="ruby-value">10000000000000000.0</span>
+153:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:workers_in_touch</span>] = []
+154:     <span class="ruby-keyword kw">end</span>
+155:     <span class="ruby-keyword kw">true</span>
+156:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000005" class="method-detail">
+        <a name="M000005"></a>
+
+        <div class="method-heading">
+          <a href="#M000005" class="method-signature">
+          <span class="method-name">job</span><span class="method-args">(uuid)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+This returns a specific <a href="JobQueue.html#M000005">job</a>, given its
+uuid.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000005-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000005-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/job_queue.rb, line 131</span>
+131:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">job</span>(<span class="ruby-identifier">uuid</span>)
+132:     <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">uuid</span>.<span class="ruby-identifier">kind_of?</span>(<span class="ruby-constant">Integer</span>)
+133:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">db</span>.<span class="ruby-identifier">transaction</span> { <span class="ruby-identifier">db</span>[<span class="ruby-identifier">uuid</span>] }
+134:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000004" class="method-detail">
+        <a name="M000004"></a>
+
+        <div class="method-heading">
+          <a href="#M000004" class="method-signature">
+          <span class="method-name">jobs</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+This returns a categorized has of all <a
+href="JobQueue.html#M000004">jobs</a> in the queue.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000004-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000004-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/job_queue.rb, line 117</span>
+117:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">jobs</span>
+118:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">db</span>.<span class="ruby-identifier">transaction</span> <span class="ruby-keyword kw">do</span>
+119:       { <span class="ruby-identifier">:jobs_waiting_unordered</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_unordered</span>],
+120:         <span class="ruby-identifier">:jobs_waiting_ordered</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_ordered</span>],
+121:         <span class="ruby-identifier">:jobs_processing_ordered</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_ordered</span>] <span class="ruby-operator">?</span> [<span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_ordered</span>]] <span class="ruby-operator">:</span> [],
+122:         <span class="ruby-identifier">:jobs_processing_unordered</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_unordered</span>]
+123:       }
+124:     <span class="ruby-keyword kw">end</span>
+125:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000007" class="method-detail">
+        <a name="M000007"></a>
+
+        <div class="method-heading">
+          <a href="#M000007" class="method-signature">
+          <span class="method-name">next_uuid</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+This method can only be called from within a transaction. It returns the
+next UUID to be used for a <a href="Job.html">Job</a>.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000007-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000007-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/job_queue.rb, line 163</span>
+163:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">next_uuid</span>
+164:     <span class="ruby-identifier">uuid</span> = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:next_uuid</span>]
+165:     <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:next_uuid</span>] <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+166:     <span class="ruby-identifier">uuid</span>
+167:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000009" class="method-detail">
+        <a name="M000009"></a>
+
+        <div class="method-heading">
+          <a href="#M000009" class="method-signature">
+          <span class="method-name">remove</span><span class="method-args">(job)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Removes a <a href="Job.html">Job</a> from the queue. No checks are made
+that the <a href="Job.html">Job</a> exists, has completed, etc.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000009-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000009-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/job_queue.rb, line 193</span>
+193:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">remove</span>(<span class="ruby-identifier">job</span>)
+194:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">db</span>.<span class="ruby-identifier">transaction</span> <span class="ruby-keyword kw">do</span>
+195:       <span class="ruby-comment cmt"># Ordered jobs</span>
+196:       <span class="ruby-identifier">waiting_ordered</span> = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_ordered</span>]
+197:       <span class="ruby-identifier">waiting_ordered</span>.<span class="ruby-identifier">delete</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span>
+198:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_ordered</span>] = <span class="ruby-identifier">waiting_ordered</span>
+199:       <span class="ruby-comment cmt"># Unordered jobs</span>
+200:       <span class="ruby-identifier">waiting_unordered</span> = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_unordered</span>]
+201:       <span class="ruby-identifier">waiting_unordered</span>.<span class="ruby-identifier">delete</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span>
+202:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_unordered</span>] = <span class="ruby-identifier">waiting_unordered</span>
+203:       <span class="ruby-comment cmt"># Ordered job being processed</span>
+204:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_ordered</span>] = <span class="ruby-keyword kw">nil</span>
+205:       <span class="ruby-identifier">db</span>.<span class="ruby-identifier">delete</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span>
+206:       <span class="ruby-comment cmt"># Unordered job being processed</span>
+207:       <span class="ruby-identifier">processing_unordered</span> = <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_unordered</span>]
+208:       <span class="ruby-identifier">processing_unordered</span>.<span class="ruby-identifier">delete</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span>
+209:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_unordered</span>] = <span class="ruby-identifier">processing_unordered</span>
+210:       <span class="ruby-comment cmt"># Remove the job itself from the db</span>
+211:       <span class="ruby-identifier">db</span>.<span class="ruby-identifier">delete</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span>
+212:       <span class="ruby-identifier">job</span>
+213:     <span class="ruby-keyword kw">end</span>
+214:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000013" class="method-detail">
+        <a name="M000013"></a>
+
+        <div class="method-heading">
+          <a href="#M000013" class="method-signature">
+          <span class="method-name">start_worker</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Forks a worker process, unless one is already active
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000013-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000013-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/job_queue.rb, line 292</span>
+292:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">start_worker</span>
+293:     <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">parent_pid</span>
+294:     <span class="ruby-comment cmt">#raise &quot;This worker process tried to start a worker process. BAAAAD idea.&quot; if parent_pid</span>
+295:     <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">worker_pid</span>
+296:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">parent_pid</span> = <span class="ruby-constant">Process</span>.<span class="ruby-identifier">pid</span>
+297:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">worker_pid</span>, <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">detached_checker_thread</span> = <span class="ruby-identifier">spawn</span> <span class="ruby-keyword kw">do</span>
+298:       <span class="ruby-constant">Signal</span>.<span class="ruby-identifier">trap</span>(<span class="ruby-value str">&quot;INT&quot;</span>, <span class="ruby-value str">&quot;IGNORE&quot;</span>)
+299:       <span class="ruby-identifier">worker_loop</span>(<span class="ruby-value">`hostname`</span>.<span class="ruby-identifier">chomp</span>, <span class="ruby-constant">Process</span>.<span class="ruby-identifier">pid</span>, <span class="ruby-identifier">parent_pid</span>)
+300:     <span class="ruby-keyword kw">end</span>
+301:     <span class="ruby-constant">Signal</span>.<span class="ruby-identifier">trap</span>(<span class="ruby-value str">&quot;EXIT&quot;</span>) { <span class="ruby-identifier">stop_worker</span> }
+302:     <span class="ruby-keyword kw">true</span>
+303:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000003" class="method-detail">
+        <a name="M000003"></a>
+
+        <div class="method-heading">
+          <a href="#M000003" class="method-signature">
+          <span class="method-name">stats</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+This returns a simple hash of statistical information.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000003-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000003-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/job_queue.rb, line 92</span>
+ 92:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">stats</span>
+ 93:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">db</span>.<span class="ruby-identifier">transaction</span> <span class="ruby-keyword kw">do</span>
+ 94:       { <span class="ruby-identifier">:jobs_waiting_unordered</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_unordered</span>].<span class="ruby-identifier">length</span>,
+ 95:         <span class="ruby-identifier">:jobs_waiting_ordered</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_ordered</span>].<span class="ruby-identifier">length</span>,
+ 96:         <span class="ruby-identifier">:jobs_processing_ordered</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_ordered</span>] <span class="ruby-operator">?</span> <span class="ruby-value">1</span> <span class="ruby-operator">:</span> <span class="ruby-value">0</span>,
+ 97:         <span class="ruby-identifier">:jobs_processing_unordered</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:processing_unordered</span>].<span class="ruby-identifier">length</span>,
+ 98:         <span class="ruby-identifier">:next_uuid</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:next_uuid</span>],
+ 99:         <span class="ruby-identifier">:last_job_submitted_at</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:last_job_submitted_at</span>],
+100:         <span class="ruby-identifier">:last_job_completed_at</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:last_job_completed_at</span>],
+101:         <span class="ruby-identifier">:jobs_completed</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:jobs_completed</span>],
+102:         <span class="ruby-identifier">:jobs_failed</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:jobs_failed</span>],
+103:         <span class="ruby-identifier">:total_time_used</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:total_time_used</span>],
+104:         <span class="ruby-identifier">:average_processing_time</span> =<span class="ruby-operator">&gt;</span> (<span class="ruby-identifier">db</span>[<span class="ruby-identifier">:jobs_completed</span>] <span class="ruby-operator">==</span> <span class="ruby-value">0</span> <span class="ruby-operator">?</span> <span class="ruby-value">0</span><span class="ruby-value">.0</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:total_time_used</span>] <span class="ruby-operator">/</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:jobs_completed</span>]),
+105:         <span class="ruby-identifier">:max_processing_time</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:max_processing_time</span>],
+106:         <span class="ruby-identifier">:min_processing_time</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:min_processing_time</span>],
+107:         <span class="ruby-identifier">:worker_pid</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">worker_pid</span>,
+108:         <span class="ruby-identifier">:workers_in_touch</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:workers_in_touch</span>]
+109:       }
+110:     <span class="ruby-keyword kw">end</span>
+111:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000014" class="method-detail">
+        <a name="M000014"></a>
+
+        <div class="method-heading">
+          <a href="#M000014" class="method-signature">
+          <span class="method-name">stop_worker</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Stops the worker process, if there is one active
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000014-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000014-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/job_queue.rb, line 308</span>
+308:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">stop_worker</span>
+309:     <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">worker_pid</span>
+310:     <span class="ruby-identifier">unregister_worker</span>(<span class="ruby-value">`hostname`</span>.<span class="ruby-identifier">chomp</span>, <span class="ruby-identifier">worker_pid</span>) <span class="ruby-comment cmt"># This should really be done from within the worker_loop</span>
+311:     <span class="ruby-constant">Thread</span>.<span class="ruby-identifier">kill</span>(<span class="ruby-value str">&quot;TERM&quot;</span>, <span class="ruby-identifier">detached_checker_thread</span>) <span class="ruby-keyword kw">rescue</span> <span class="ruby-keyword kw">nil</span>
+312:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">detached_checker_thread</span> = <span class="ruby-keyword kw">nil</span>
+313:     <span class="ruby-constant">Process</span>.<span class="ruby-identifier">kill</span>(<span class="ruby-value str">&quot;TERM&quot;</span>, <span class="ruby-identifier">worker_pid</span>) <span class="ruby-keyword kw">rescue</span> <span class="ruby-keyword kw">nil</span>
+314:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">worker_pid</span> = <span class="ruby-keyword kw">nil</span>
+315:     <span class="ruby-keyword kw">true</span>
+316:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000008" class="method-detail">
+        <a name="M000008"></a>
+
+        <div class="method-heading">
+          <a href="#M000008" class="method-signature">
+          <span class="method-name">submit</span><span class="method-args">(job)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Enqueues a <a href="JobQueue.html#M000005">job</a> for processing.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000008-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000008-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/job_queue.rb, line 173</span>
+173:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">submit</span>(<span class="ruby-identifier">job</span>)
+174:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">db</span>.<span class="ruby-identifier">transaction</span> <span class="ruby-keyword kw">do</span>
+175:       <span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span> = <span class="ruby-identifier">next_uuid</span>
+176:       <span class="ruby-identifier">job</span>.<span class="ruby-identifier">submitted_at</span> = <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>.<span class="ruby-identifier">utc</span>
+177:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:last_job_submitted_at</span>] = <span class="ruby-identifier">job</span>.<span class="ruby-identifier">submitted_at</span>
+178:       <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">unordered</span>
+179:         <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_unordered</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span>
+180:       <span class="ruby-keyword kw">else</span>
+181:         <span class="ruby-identifier">db</span>[<span class="ruby-identifier">:waiting_ordered</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span>
+182:       <span class="ruby-keyword kw">end</span>
+183:       <span class="ruby-identifier">db</span>[<span class="ruby-identifier">job</span>.<span class="ruby-identifier">uuid</span>] = <span class="ruby-identifier">job</span>
+184:       <span class="ruby-identifier">job</span>
+185:     <span class="ruby-keyword kw">end</span>
+186:   <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+
+  </div>
+
+
+<div id="validator-badges">
+  <p><small><a href="http://validator.w3.org/check/referer">[Validate]</a></small></p>
+</div>
+
+</body>
+</html>
