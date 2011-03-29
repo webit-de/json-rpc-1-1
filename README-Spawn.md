@@ -6,7 +6,7 @@ code so that your application can return results to your users more quickly.
 This plugin works by creating new database connections in ActiveRecord::Base for the
 spawned block.
 
-The plugin also patches ActiveRecord::Base to handle some known bugs when using 
+The plugin also patches ActiveRecord::Base to handle some known bugs when using
 threads (see lib/patches.rb).
 
 Usage
@@ -15,11 +15,11 @@ Usage
 Here's a simple example of how to demonstrate the spawn plugin.
 In one of your controllers, insert this code (after installing the plugin of course):
 
-  spawn do
-    logger.info("I feel sleepy...")
-    sleep 11
-    logger.info("Time to wake up!")
-  end
+>     spawn do
+>       logger.info("I feel sleepy...")
+>       sleep 11
+>       logger.info("Time to wake up!")
+>     end
 
 If everything is working correctly, your controller should finish quickly then you'll see
 the last log message several seconds later.
@@ -34,7 +34,7 @@ spawn to Spawn::wait(), like this:
     end
   end
   # wait for all N blocks of code to finish running
-  wait(spawn_ids)
+  wait(spawn\_ids)
 
 If you want your forked child to run at a lower priority than the parent process, pass in
 the :nice option like this:
@@ -51,10 +51,10 @@ For example, this is how you can tell spawn to use threading on the call,
   spawn(:method => :thread) do
     something
   end
-  
+
 When using the :thread setting, spawn will check to make sure that you have set
 allow_concurrency=true in your configuration.   If you want this setting then
-put this line in one of your environment config files: 
+put this line in one of your environment config files:
 
   config.active_record.allow_concurrency = true
 
@@ -94,7 +94,7 @@ Forking advantages:
     mode (config.cache_classes = false).
 
 Threading advantages:
-  - less filling - threads take less resources... how much less?  it depends.   Some 
+  - less filling - threads take less resources... how much less?  it depends.   Some
     flavors of Unix are pretty efficient at forking so the threading advantage may not
     be as big as you think... but then again, maybe it's more than you think.  ;-)
   - debugging - you can set breakpoints in your threads
@@ -109,7 +109,7 @@ in rails for background processing.
 Further inspiration for the threading implementation came from Jonathon Rochkind's
 blog post on threading in rails.
     http://bibwild.wordpress.com/2007/08/28/threading-in-rails/
-    
+
 Also thanks to all who have helped debug problems and suggest improvements including:
   Ahmed Adam, Tristan Schneiter, Scott Haug, Andrew Garfield, Eugene Otto, Dan Sharp,
   Olivier Ruffin
