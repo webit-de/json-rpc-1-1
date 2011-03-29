@@ -15,11 +15,11 @@ Usage
 Here's a simple example of how to demonstrate the spawn plugin.
 In one of your controllers, insert this code (after installing the plugin of course):
 
->     spawn do
->       logger.info("I feel sleepy...")
->       sleep 11
->       logger.info("Time to wake up!")
->     end
+> spawn do
+>   logger.info("I feel sleepy...")
+>   sleep 11
+>   logger.info("Time to wake up!")
+> end
 
 If everything is working correctly, your controller should finish quickly then you'll see
 the last log message several seconds later.
@@ -27,50 +27,50 @@ the last log message several seconds later.
 If you need to wait for the spawned processes/threads, then pass the objects returned by
 spawn to Spawn::wait(), like this:
 
-  N.times do |i|
-    # spawn N blocks of code
-    spawn_ids[i] = spawn do
-      something(i)
-    end
-  end
-  # wait for all N blocks of code to finish running
-  wait(spawn\_ids)
+> N.times do |i|
+>   # spawn N blocks of code
+>   spawn\_ids[i] = spawn do
+>     something(i)
+>   end
+> end
+> # wait for all N blocks of code to finish running
+> wait(spawn\_ids)
 
 If you want your forked child to run at a lower priority than the parent process, pass in
 the :nice option like this:
 
-  spawn(:nice => 7) do
-    do_something_nicely
-  end
+> spawn(:nice => 7) do
+>   do\_something\_nicely
+> end
 
 By default, spawn will use the fork to spawn child processes.  You can configure it to
 do threading either by telling the spawn method when you call it or by configuring your
 environment.
 For example, this is how you can tell spawn to use threading on the call,
 
-  spawn(:method => :thread) do
-    something
-  end
+> spawn(:method => :thread) do
+>   something
+> end
 
 When using the :thread setting, spawn will check to make sure that you have set
-allow_concurrency=true in your configuration.   If you want this setting then
+allow\_concurrency=true in your configuration.   If you want this setting then
 put this line in one of your environment config files:
 
-  config.active_record.allow_concurrency = true
+> config.active_record.allow_concurrency = true
 
 If it is not set, then spawn will raise an exception.
 
 To (optionally) configure the spawn method in your configuration, add a line to
 your configuration file(s) like this:
 
-  Spawn::method :thread
+> Spawn::method :thread
 
 If you don't set any configuration, the :method will default to :fork.  To
 specify different values for different environments, pass the environment as
 the 2nd argument:
 
-  Spawn::method :fork, 'production'
-  Spawn::method :yield, 'test'
+> Spawn::method :fork, 'production'
+> Spawn::method :yield, 'test'
 
 This allows you to set your production and development environments to use different
 methods according to your needs.
@@ -82,6 +82,7 @@ There are several tradeoffs for using threading vs. forking.   Forking was chose
 default primarily because it requires no configuration to get it working out of the box.
 
 Forking advantages:
+
   - more reliable? - the ActiveRecord code is generally not deemed to be thread-safe.
     Even though spawn attempts to patch known problems with the threaded implementation,
     there are no guarantees.  Forking is heavier but should be fairly reliable.
@@ -90,10 +91,11 @@ Forking advantages:
     want to restart your server without killing the spawned processes.
     We don't necessarily condone this (i.e. haven't tried it) but it's technically possible.
   - easier - forking works out of the box with spawn, threading requires you set
-    allow_concurrency=true.   Also, beware of automatic reloading of classes in development
-    mode (config.cache_classes = false).
+    allow\_concurrency=true.   Also, beware of automatic reloading of classes in development
+    mode (config.cache\_classes = false).
 
 Threading advantages:
+
   - less filling - threads take less resources... how much less?  it depends.   Some
     flavors of Unix are pretty efficient at forking so the threading advantage may not
     be as big as you think... but then again, maybe it's more than you think.  ;-)
@@ -104,11 +106,14 @@ Acknowledgements
 
 This plugin was initially inspired by Scott Persinger's blog post on how to use fork
 in rails for background processing.
-    http://geekblog.vodpod.com/?p=26
+
+http://geekblog.vodpod.com/?p=26
+
 
 Further inspiration for the threading implementation came from Jonathon Rochkind's
 blog post on threading in rails.
-    http://bibwild.wordpress.com/2007/08/28/threading-in-rails/
+
+http://bibwild.wordpress.com/2007/08/28/threading-in-rails/
 
 Also thanks to all who have helped debug problems and suggest improvements including:
   Ahmed Adam, Tristan Schneiter, Scott Haug, Andrew Garfield, Eugene Otto, Dan Sharp,
@@ -118,4 +123,3 @@ Also thanks to all who have helped debug problems and suggest improvements inclu
   <your name here>
 
 Copyright (c) 2007-08 Tom Anderson (tom@squeat.com), see LICENSE
->
