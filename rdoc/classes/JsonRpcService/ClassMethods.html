@@ -80,9 +80,11 @@
       <h3 class="section-bar">Methods</h3>
 
       <div class="name-list">
-      <a href="#M000015">json_rpc_procedure</a>&nbsp;&nbsp;
-      <a href="#M000014">json_rpc_service</a>&nbsp;&nbsp;
-      <a href="#M000013">service</a>&nbsp;&nbsp;
+      <a href="#M000046">disable</a>&nbsp;&nbsp;
+      <a href="#M000047">enable</a>&nbsp;&nbsp;
+      <a href="#M000045">json_rpc_procedure</a>&nbsp;&nbsp;
+      <a href="#M000044">json_rpc_service</a>&nbsp;&nbsp;
+      <a href="#M000048">service</a>&nbsp;&nbsp;
       </div>
     </div>
 
@@ -111,72 +113,140 @@
     <div id="methods">
       <h3 class="section-bar">Public Instance methods</h3>
 
-      <div id="method-M000015" class="method-detail">
-        <a name="M000015"></a>
+      <div id="method-M000046" class="method-detail">
+        <a name="M000046"></a>
 
         <div class="method-heading">
-          <a href="#M000015" class="method-signature">
+          <a href="#M000046" class="method-signature">
+          <span class="method-name">disable</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Turns off the <a href="ClassMethods.html#M000048">service</a>, making it
+return HTTP 503 as a status code.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000046-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000046-source">
+<pre>
+    <span class="ruby-comment cmt"># File lib/json_rpc_service.rb, line 33</span>
+33:     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">disable</span>
+34:       <span class="ruby-ivar">@service</span>.<span class="ruby-identifier">disabled</span> = <span class="ruby-keyword kw">true</span>
+35:     <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000047" class="method-detail">
+        <a name="M000047"></a>
+
+        <div class="method-heading">
+          <a href="#M000047" class="method-signature">
+          <span class="method-name">enable</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Turns on the <a href="ClassMethods.html#M000048">service</a>, making it
+accept API calls as usual.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000047-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000047-source">
+<pre>
+    <span class="ruby-comment cmt"># File lib/json_rpc_service.rb, line 40</span>
+40:     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">enable</span>
+41:       <span class="ruby-ivar">@service</span>.<span class="ruby-identifier">disabled</span> = <span class="ruby-keyword kw">false</span>
+42:     <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000045" class="method-detail">
+        <a name="M000045"></a>
+
+        <div class="method-heading">
+          <a href="#M000045" class="method-signature">
           <span class="method-name">json_rpc_procedure</span><span class="method-args">(opts={})</span>
           </a>
         </div>
       
         <div class="method-description">
+          <p>
+Declares a callable API method for this <a
+href="ClassMethods.html#M000048">service</a>. See the README for valid
+options.
+</p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000015-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000015-source">
+            onclick="toggleCode('M000045-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000045-source">
 <pre>
-    <span class="ruby-comment cmt"># File lib/json_rpc_service.rb, line 24</span>
-24:     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">json_rpc_procedure</span>(<span class="ruby-identifier">opts</span>={})
-25:       <span class="ruby-ivar">@service</span>.<span class="ruby-identifier">add_procedure</span> <span class="ruby-identifier">opts</span>
-26:     <span class="ruby-keyword kw">end</span>
+    <span class="ruby-comment cmt"># File lib/json_rpc_service.rb, line 26</span>
+26:     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">json_rpc_procedure</span>(<span class="ruby-identifier">opts</span>={})
+27:       <span class="ruby-ivar">@service</span>.<span class="ruby-identifier">add_procedure</span> <span class="ruby-identifier">opts</span>
+28:     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
         </div>
       </div>
 
-      <div id="method-M000014" class="method-detail">
-        <a name="M000014"></a>
+      <div id="method-M000044" class="method-detail">
+        <a name="M000044"></a>
 
         <div class="method-heading">
-          <a href="#M000014" class="method-signature">
+          <a href="#M000044" class="method-signature">
           <span class="method-name">json_rpc_service</span><span class="method-args">(opts={})</span>
           </a>
         </div>
       
         <div class="method-description">
+          <p>
+Declare that this controller is a JSON-RPC <a
+href="ClassMethods.html#M000048">service</a>. See the Server#initialize
+method for valid options.
+</p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000014-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000014-source">
+            onclick="toggleCode('M000044-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000044-source">
 <pre>
-    <span class="ruby-comment cmt"># File lib/json_rpc_service.rb, line 18</span>
-18:     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">json_rpc_service</span>(<span class="ruby-identifier">opts</span>={})
-19:       <span class="ruby-identifier">session</span> <span class="ruby-identifier">:off</span>
-20:       <span class="ruby-identifier">include</span> <span class="ruby-constant">JsonRpcService</span><span class="ruby-operator">::</span><span class="ruby-constant">InstanceMethods</span>
-21:       <span class="ruby-ivar">@service</span> = <span class="ruby-constant">Service</span>.<span class="ruby-identifier">new</span> <span class="ruby-identifier">opts</span>
-22:     <span class="ruby-keyword kw">end</span>
+    <span class="ruby-comment cmt"># File lib/json_rpc_service.rb, line 16</span>
+16:     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">json_rpc_service</span>(<span class="ruby-identifier">opts</span>={})
+17:       <span class="ruby-identifier">session</span> <span class="ruby-identifier">:off</span> <span class="ruby-keyword kw">if</span> <span class="ruby-keyword kw">defined?</span>(<span class="ruby-constant">RAILS_GEM_VERSION</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-constant">RAILS_GEM_VERSION</span>.<span class="ruby-identifier">to_f</span> <span class="ruby-operator">&lt;</span> <span class="ruby-value">2.3</span>
+18:       <span class="ruby-identifier">include</span> <span class="ruby-constant">JsonRpcService</span><span class="ruby-operator">::</span><span class="ruby-constant">InstanceMethods</span>
+19:       <span class="ruby-ivar">@service</span> = <span class="ruby-constant">Service</span>.<span class="ruby-identifier">new</span> <span class="ruby-identifier">opts</span>
+20:     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
         </div>
       </div>
 
-      <div id="method-M000013" class="method-detail">
-        <a name="M000013"></a>
+      <div id="method-M000048" class="method-detail">
+        <a name="M000048"></a>
 
         <div class="method-heading">
-          <a href="#M000013" class="method-signature">
+          <a href="#M000048" class="method-signature">
           <span class="method-name">service</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
+          <p>
+Returns the <a href="ClassMethods.html#M000048">service</a> object for this
+class.
+</p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000013-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000013-source">
+            onclick="toggleCode('M000048-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000048-source">
 <pre>
-    <span class="ruby-comment cmt"># File lib/json_rpc_service.rb, line 14</span>
-14:     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">service</span>
-15:       <span class="ruby-ivar">@service</span>
-16:     <span class="ruby-keyword kw">end</span>
+    <span class="ruby-comment cmt"># File lib/json_rpc_service.rb, line 47</span>
+47:     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">service</span>
+48:       <span class="ruby-ivar">@service</span>
+49:     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
         </div>
