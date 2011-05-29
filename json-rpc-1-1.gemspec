@@ -5,11 +5,11 @@ require "json-rpc-1-1/version"
 Gem::Specification.new do |s|
   s.name        = "jsonrpc"
   s.version     = JsonRPC::VERSION
-  s.authors     = ["Glenn Francis Murray"]
-  s.email       = ["glenn@metonymous.com"]
-  s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.authors     = ["Peter Bengtson"]
+  s.email       = ["peter@peterbengtson.com"]
+  s.homepage    = "https://github.com/PeterBengtson/json-rpc-1-1"
+  s.summary     = %q{A Rails plugin implementing the JSON-RPC 1.1 protocol for remote procedure calls}
+  s.description = %q{Implementation consists of two parts: a service side and a client side. The server part is written specifically for Ruby on Rails, but the client does not really require Rails. A Rails application may choose to act as a service provider, as a client, or both.}
 
   s.rubyforge_project = "json-rpc-1-1"
 
