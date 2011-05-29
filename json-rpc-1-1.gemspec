@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
 require "version"
+require "init"
 
 Gem::Specification.new do |s|
   s.name        = "json-rpc-1-1"
