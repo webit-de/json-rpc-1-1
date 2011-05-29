@@ -4,7 +4,7 @@ require "json-rpc-1-1/version"
 
 Gem::Specification.new do |s|
   s.name        = "json-rpc-1-1"
-  s.version     = Json::Rpc::1::1::VERSION
+  s.version     = Json-Rpc-1-1::VERSION
   s.authors     = ["Glenn Francis Murray"]
   s.email       = ["glenn@metonymous.com"]
   s.homepage    = ""
