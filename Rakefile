@@ -1,6 +1,7 @@
 require 'rake'
 require 'rake/rdoctask'
 require 'spec/rake/spectask'
+require 'bundler/gem_tasks'
 
 desc 'Default: run specs.'
 task :default => :spec
