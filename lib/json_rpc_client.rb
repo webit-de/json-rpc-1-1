@@ -39,6 +39,8 @@ class JsonRpcClient
     @uri = URI.parse base_uri
     @host = @uri.host
     @port = @uri.port
+    @user = opts[:user]
+    @password = opts[:password]
     @proxy = opts[:proxy] && URI.parse(opts[:proxy])
     @proxy_host = opts[:proxy] && @proxy.host
     @proxy_port = opts[:proxy] && @proxy.port
@@ -116,6 +118,7 @@ class JsonRpcClient
     begin
       begin
         Net::HTTP.start(@host, @port, @proxy_host, @proxy_port) do |http|
+	  req.basic_auth(@user, @password) if @user and @password
           res = http.request req
           if res.content_type != 'application/json'
             @logger.debug "JSON-RPC server at #{host_and_port} returned non-JSON data: #{res.body}" if @logger
