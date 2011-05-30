@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>File: job_queue.rb</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+  <script type="text/javascript">
+  // <![CDATA[
+
+  function popupCode( url ) {
+    window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+  }
+
+  function toggleCode( id ) {
+    if ( document.getElementById )
+      elem = document.getElementById( id );
+    else if ( document.all )
+      elem = eval( "document.all." + id );
+    else
+      return false;
+
+    elemStyle = elem.style;
+    
+    if ( elemStyle.display != "block" ) {
+      elemStyle.display = "block"
+    } else {
+      elemStyle.display = "none"
+    }
+
+    return true;
+  }
+  
+  // Make codeblocks hidden by default
+  document.writeln( "<style type=\"text/css\">div.method-source-code { display: none }</style>" )
+  
+  // ]]>
+  </script>
+
+</head>
+<body>
+
+
+
+  <div id="fileHeader">
+    <h1>job_queue.rb</h1>
+    <table class="header-table">
+    <tr class="top-aligned-row">
+      <td><strong>Path:</strong></td>
+      <td>lib/job_queue.rb
+      </td>
+    </tr>
+    <tr class="top-aligned-row">
+      <td><strong>Last Update:</strong></td>
+      <td>Tue Mar 29 15:38:14 +0300 2011</td>
+    </tr>
+    </table>
+  </div>
+  <!-- banner header -->
+
+  <div id="bodyContent">
+
+
+
+  <div id="contextContent">
+
+    <div id="description">
+      <p>
+This is the <a href="../../classes/JobQueue.html">JobQueue</a> class. It
+will be moved into the JSON-RPC plugin eventually.
+</p>
+<p>
+Interface:
+</p>
+<pre>
+  Jobqueue.new(db_path)    returns a new JobQueue object which is the interface
+                           to the queue. The optional param db_path defines where
+                           the database file resides. It is created if it doesn't
+                           already exist and defaults to
+                           &quot;#{RAILS_ROOT}/db/json_rpc_queue/#{RAILS_ENV}.pstore&quot;.
+</pre>
+<p>
+Instance methods
+</p>
+<pre>
+  stats                    returns a hash of usage statistics.
+
+  jobs                     returns a hash of all job uids, queued or currently processing.
+                           The hash has keys for each category of job.
+
+  job(uuid)                returns the job of the given uuid.
+
+  hard_reset               resets the db. Job uuids will start over from 1.
+
+  submit(job)              submits a Job object for processing and gives it an uuid.
+
+  claim                    if there is a Job ready for processing, returns it.
+                           If not, or if a Job has been claimed but not completed,
+                           returns nil. This means that only one job at a time is
+                           processed.
+
+  complete(job)            when a claimed job has finished successfully, this method
+                           should always be called to let the next scheduled job
+                           be claimed.
+
+  fail(job)                when a claimed job has failed completely, this method
+                           should always be called to let the next scheduled job
+                           be claimed.
+
+  remove(job)              removes a Job from processing (aborting it). This is a
+                           semi-internal method which rarely should be used.
+
+  start_worker             starts an asynchronous worker task. Only one per Rails
+                           process is allowed (at this time): returns false if a
+                           worker process was already running. Returns true if one
+                           was actually started.
+
+  stop_worker              stops the asynchronous worker task. Returns true if
+                           a worker was stopped, false if not.
+</pre>
+
+    </div>
+
+    <div id="requires-list">
+      <h3 class="section-bar">Required files</h3>
+
+      <div class="name-list">
+      ostruct&nbsp;&nbsp;
+      job&nbsp;&nbsp;
+      job_step&nbsp;&nbsp;
+      fileutils&nbsp;&nbsp;
+      pstore&nbsp;&nbsp;
+      </div>
+    </div>
+
+   </div>
+
+
+  </div>
+
+
+    <!-- if includes -->
+
+    <div id="section">
+
+
+
+
+
+      
+
+
+    <!-- if method_list -->
+
+
+  </div>
+
+
+<div id="validator-badges">
+  <p><small><a href="http://validator.w3.org/check/referer">[Validate]</a></small></p>
+</div>
+
+</body>
+</html>
