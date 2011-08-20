@@ -1,11 +1,10 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
 require "version"
-require "init"
 
 Gem::Specification.new do |s|
   s.name        = "json-rpc-1-1"
-  s.version     = JsonRPC::VERSION
+  s.version     = JsonRPC11::VERSION
   s.authors     = ["Peter Bengtson"]
   s.email       = ["peter@peterbengtson.com"]
   s.homepage    = "https://github.com/PeterBengtson/json-rpc-1-1"
