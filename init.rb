@@ -1,7 +1,7 @@
 # Include hook code here
 
 require 'json/ext'
-require 'json/add/rails'
+# require 'json/add/rails'
 require 'ostruct'
 
 require 'job'
