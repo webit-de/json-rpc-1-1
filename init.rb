@@ -1,4 +1,5 @@
 # Include hook code here
+require 'spawn/spawn'
 
 require 'json/ext'
 # require 'json/add/rails'
@@ -11,7 +12,6 @@ require 'json_rpc_client'
 require 'json_rpc_service'
 require 'json_rpc_utils'
 
-require 'spawn/spawn'
 require 'spawn/patches'
 ActionController::Base.send :include, Spawn
 if defined?(ActiveRecord)
