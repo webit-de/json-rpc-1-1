@@ -35,8 +35,8 @@ def stringify_symbols_in_hash(h)
   res = {}
   h.each do |k, v|
     res[k.to_s] = case v
-                  when Hash: stringify_symbols_in_hash(v)
-                  when Array: stringify_symbols_in_array(v)
+                  when Hash then stringify_symbols_in_hash(v)
+                  when Array then stringify_symbols_in_array(v)
                   else
                     v
                   end
@@ -48,8 +48,8 @@ def stringify_symbols_in_array(h)
   res = []
   h.each do |v|
     res << case v
-           when Hash: stringify_symbols_in_hash(v)
-           when Array: stringify_symbols_in_array(v)
+           when Hash then stringify_symbols_in_hash(v)
+           when Array then  stringify_symbols_in_array(v)
            else
              v
            end

@@ -40,11 +40,11 @@ class JobStep < OpenStruct
   #
   def execute(thing, args)
     case thing
-    when String: eval thing
-    when Symbol: 
+    when String then eval thing
+    when Symbol then 
       fresh_args = Job.decode_activerecord_objects(args)
       Job.decode_activerecord_object(target_descriptor).send(thing, *fresh_args)
-    when NilClass: nil
+    when NilClass then nil
     else
       raise "Unsupported :do or :rollback type: '#{thing}'"
     end

@@ -258,9 +258,9 @@ module JsonRpcService
           arg = (!@args_pos[i].nil? ? @args_pos[i] : (!arg_named.nil? ? arg_named : arg_numbered))
           # Type-check arg
           case argtype
-          when 'bit'
+          when 'bit' then
             set_error(-32602, "The arg #{argname} must be literally true or false (was #{arg.to_json})") and return unless arg == true || arg == false
-          when 'num'
+          when 'num' then
             if !arg.is_a?(Numeric)
               if arg.is_a?(String) && (arg_conv = arg.to_i rescue nil).to_s == arg
                 arg = arg_conv
@@ -271,7 +271,7 @@ module JsonRpcService
                 return
               end
             end
-          when 'str'
+          when 'str' then
             if !arg.is_a?(String)
               if arg.is_a?(Numeric)
                 arg = arg.to_s
@@ -280,9 +280,9 @@ module JsonRpcService
                 return
               end
             end
-          when 'arr'
+          when 'arr' then
             set_error(-32602, "The arg #{argname} must be an array (was #{arg.to_json})") and return unless arg.is_a?(Array)
-          when 'obj'
+          when 'obj' then
             set_error(-32602, "The arg #{argname} must be a JSON object (was #{arg.to_json})") and return unless arg.is_a?(Hash)
           end
           # Set the positional arg
@@ -350,8 +350,8 @@ module JsonRpcService
             val ||= ''            
             val = URI::decode(val).gsub('+', ' ')
             case old = @args_named[arg]
-            when Array:  old << val
-            when nil:    @args_named[arg] = val
+            when Array then  old << val
+            when nil then    @args_named[arg] = val
             else        
               @args_named[arg] = [old, val]
             end
@@ -399,9 +399,9 @@ module JsonRpcService
           set_error -32600, 'Method not specified' and return unless @fun
           args = body["params"]
           case args
-          when Array
+          when Array then
             @args_pos = args
-          when Hash
+          when Hash then
             @args_named = args
           else
             set_error -32602, 'Params must be JSON Object or Array' and return if args && !args.is_a?(Hash) && !args.is_a?(Array)
