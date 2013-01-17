@@ -341,8 +341,12 @@ module JsonRpcService
           @fun = par[:method]
           par.delete 'method'       # We don't want this in our arg list
           super service, req, par
-          set_error -32600, "Invalid request." and return unless @fun.length == 1
-          @fun = @fun[0]
+          if Array === @fun
+            set_error -32600, "Invalid request." and return unless @fun.length == 1
+            @fun = @fun[0]
+          end
+          @fun = @fun.to_s
+          set_error -32600, "Invalid request." and return if @fun.blank?
           query_string = get_query_string 
           return if query_string.blank?
           query_string.split('&').each do |pair|
