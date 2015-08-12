@@ -16,6 +16,8 @@ require 'spawn/patches'
 ActionController::Base.send :include, Spawn
 if defined?(ActiveRecord)
   ActiveRecord::Base.send :include, Spawn
+end
+if defined?(ActiveRecord::Observer)
   ActiveRecord::Observer.send :include, Spawn
 end
 
